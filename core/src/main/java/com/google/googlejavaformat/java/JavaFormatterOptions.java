@@ -34,7 +34,10 @@ public class JavaFormatterOptions {
     GOOGLE(1),
 
     /** The AOSP-compliant configuration. */
-    AOSP(2);
+    AOSP(2),
+
+    /** The Hadoop configuration. */
+    Hadoop(1);
 
     private final int indentationMultiplier;
 

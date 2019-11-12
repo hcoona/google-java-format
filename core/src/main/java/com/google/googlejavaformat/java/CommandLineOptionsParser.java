@@ -86,6 +86,10 @@ final class CommandLineOptionsParser {
         case "-a":
           optionsBuilder.aosp(true);
           break;
+        case "--hadoop":
+        case "-hadoop":
+          optionsBuilder.hadoop(true);
+          break;
         case "--version":
         case "-version":
         case "-v":

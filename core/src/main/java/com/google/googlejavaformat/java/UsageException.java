@@ -40,6 +40,8 @@ final class UsageException extends Exception {
     "    File name to use for diagnostics when formatting standard input (default is <stdin>).",
     "  --aosp, -aosp, -a",
     "    Use AOSP style instead of Google Style (4-space indentation).",
+    "  --hadoop, -hadoop",
+    "    Use Hadoop style instead of Google Style (80 line length).",
     "  --fix-imports-only",
     "    Fix import order and remove any unused imports, but do no other formatting.",
     "  --skip-sorting-imports",

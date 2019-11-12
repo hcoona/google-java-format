@@ -32,6 +32,7 @@ final class CommandLineOptions {
   private final ImmutableList<Integer> offsets;
   private final ImmutableList<Integer> lengths;
   private final boolean aosp;
+  private final boolean hadoop;
   private final boolean version;
   private final boolean help;
   private final boolean stdin;
@@ -50,6 +51,7 @@ final class CommandLineOptions {
       ImmutableList<Integer> offsets,
       ImmutableList<Integer> lengths,
       boolean aosp,
+      boolean hadoop,
       boolean version,
       boolean help,
       boolean stdin,
@@ -66,6 +68,7 @@ final class CommandLineOptions {
     this.offsets = offsets;
     this.lengths = lengths;
     this.aosp = aosp;
+    this.hadoop = hadoop;
     this.version = version;
     this.help = help;
     this.stdin = stdin;
@@ -106,6 +109,11 @@ final class CommandLineOptions {
   /** Use AOSP style instead of Google Style (4-space indentation). */
   boolean aosp() {
     return aosp;
+  }
+
+  /** Use Hadoop style instead of Google Style (80 line length). */
+  boolean hadoop() {
+    return hadoop;
   }
 
   /** Print the version. */
@@ -176,6 +184,7 @@ final class CommandLineOptions {
     private final ImmutableList.Builder<Integer> lengths = ImmutableList.builder();
     private boolean inPlace = false;
     private boolean aosp = false;
+    private boolean hadoop = false;
     private boolean version = false;
     private boolean help = false;
     private boolean stdin = false;
@@ -212,6 +221,11 @@ final class CommandLineOptions {
 
     Builder aosp(boolean aosp) {
       this.aosp = aosp;
+      return this;
+    }
+
+    Builder hadoop(boolean hadoop) {
+      this.hadoop = hadoop;
       return this;
     }
 
@@ -273,6 +287,7 @@ final class CommandLineOptions {
           offsets.build(),
           lengths.build(),
           aosp,
+          hadoop,
           version,
           help,
           stdin,

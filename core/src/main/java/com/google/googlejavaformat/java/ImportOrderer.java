@@ -140,6 +140,14 @@ public class ImportOrderer {
           .thenComparing(Import::imported);
 
   /**
+   * A {@link Comparator} that orders {@link Import}s by Hadoop Style.
+   */
+  private static final Comparator<Import> HADOOP_IMPORT_COMPARATOR =
+      Comparator.comparing(Import::isStatic, trueFirst())
+          .thenComparing(Import::isJava, trueFirst())
+          .thenComparing(Import::imported);
+
+  /**
    * Determines whether to insert a blank line between the {@code prev} and {@code curr} {@link
    * Import}s based on Google style.
    */
@@ -162,6 +170,21 @@ public class ImportOrderer {
     return !prev.topLevel().equals(curr.topLevel());
   }
 
+  /**
+   * Determines whether to insert a blank line between the {@code prev} and {@code curr} {@link
+   * Import}s based on Hadoop style.
+   */
+  private static boolean shouldInsertBlankLineHadoop(Import prev, Import curr) {
+    if (prev.isStatic() && !curr.isStatic()) {
+      return true;
+    }
+    // insert blank line between "com.android" from "com.anythingelse"
+    if (prev.isJava() && !curr.isJava()) {
+      return true;
+    }
+    return false;
+  }
+
   private final String text;
   private final ImmutableList<Tok> toks;
   private final String lineSeparator;
@@ -178,6 +201,9 @@ public class ImportOrderer {
     } else if (style.equals(Style.AOSP)) {
       this.importComparator = AOSP_IMPORT_COMPARATOR;
       this.shouldInsertBlankLineFn = ImportOrderer::shouldInsertBlankLineAosp;
+    } else if (style.equals(Style.Hadoop)) {
+      this.importComparator = HADOOP_IMPORT_COMPARATOR;
+      this.shouldInsertBlankLineFn = ImportOrderer::shouldInsertBlankLineHadoop;
     } else {
       throw new IllegalArgumentException("Unsupported code style: " + style);
     }

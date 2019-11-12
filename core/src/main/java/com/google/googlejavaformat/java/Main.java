@@ -19,6 +19,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.io.ByteStreams;
 import com.google.googlejavaformat.FormatterDiagnostic;
 import com.google.googlejavaformat.java.JavaFormatterOptions.Style;
+
 import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,23 +36,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-/** The main class for the Java formatter CLI. */
+/**
+ * The main class for the Java formatter CLI.
+ */
 public final class Main {
   private static final int MAX_THREADS = 20;
   private static final String STDIN_FILENAME = "<stdin>";
-
-  static final String versionString() {
-    return "google-java-format: Version " + GoogleJavaFormatVersion.version();
-  }
-
   private final PrintWriter outWriter;
   private final PrintWriter errWriter;
   private final InputStream inStream;
-
   public Main(PrintWriter outWriter, PrintWriter errWriter, InputStream inStream) {
     this.outWriter = outWriter;
     this.errWriter = errWriter;
     this.inStream = inStream;
+  }
+
+  static final String versionString() {
+    return "google-java-format: Version " + GoogleJavaFormatVersion.version();
   }
 
   /**
@@ -79,6 +80,49 @@ public final class Main {
   }
 
   /**
+   * Parses and validates command-line flags.
+   */
+  public static CommandLineOptions processArgs(String... args) throws UsageException {
+    CommandLineOptions parameters;
+    try {
+      parameters = CommandLineOptionsParser.parse(Arrays.asList(args));
+    } catch (IllegalArgumentException e) {
+      throw new UsageException(e.getMessage());
+    } catch (Throwable t) {
+      t.printStackTrace();
+      throw new UsageException(t.getMessage());
+    }
+    int filesToFormat = parameters.files().size();
+    if (parameters.stdin()) {
+      filesToFormat++;
+    }
+
+    if (parameters.inPlace() && parameters.files().isEmpty()) {
+      throw new UsageException("in-place formatting was requested but no files were provided");
+    }
+    if (parameters.isSelection() && filesToFormat != 1) {
+      throw new UsageException("partial formatting is only support for a single file");
+    }
+    if (parameters.offsets().size() != parameters.lengths().size()) {
+      throw new UsageException("-offsets and -lengths flags must be provided in matching pairs");
+    }
+    if (filesToFormat <= 0 && !parameters.version() && !parameters.help()) {
+      throw new UsageException("no files were provided");
+    }
+    if (parameters.stdin() && !parameters.files().isEmpty()) {
+      throw new UsageException("cannot format from standard input and files simultaneously");
+    }
+    if (parameters.assumeFilename().isPresent() && !parameters.stdin()) {
+      throw new UsageException(
+          "--assume-filename is only supported when formatting standard input");
+    }
+    if (parameters.dryRun() && parameters.inPlace()) {
+      throw new UsageException("cannot use --dry-run and --in-place at the same time");
+    }
+    return parameters;
+  }
+
+  /**
    * The main entry point for the formatter, with some number of file names to format. We process
    * them in parallel, but we must be careful; if multiple file names refer to the same file (which
    * is hard to determine), we must serialize their update.
@@ -95,8 +139,19 @@ public final class Main {
       throw new UsageException();
     }
 
-    JavaFormatterOptions options =
-        JavaFormatterOptions.builder().style(parameters.aosp() ? Style.AOSP : Style.GOOGLE).build();
+    JavaFormatterOptions.Builder optionsBuilder =
+        JavaFormatterOptions.builder();
+    if (parameters.aosp()) {
+      optionsBuilder.style(Style.AOSP);
+      Formatter.MAX_LINE_LENGTH = 100;
+    } else if (parameters.hadoop()) {
+      optionsBuilder.style(Style.Hadoop);
+      Formatter.MAX_LINE_LENGTH = 80;
+    } else {
+      optionsBuilder.style(Style.GOOGLE);
+      Formatter.MAX_LINE_LENGTH = 100;
+    }
+    JavaFormatterOptions options = optionsBuilder.build();
 
     if (parameters.stdin()) {
       return formatStdin(parameters, options);
@@ -208,46 +263,5 @@ public final class Main {
       // TODO(cpovirk): Catch other types of exception (as we do in the formatFiles case).
     }
     return ok ? 0 : 1;
-  }
-
-  /** Parses and validates command-line flags. */
-  public static CommandLineOptions processArgs(String... args) throws UsageException {
-    CommandLineOptions parameters;
-    try {
-      parameters = CommandLineOptionsParser.parse(Arrays.asList(args));
-    } catch (IllegalArgumentException e) {
-      throw new UsageException(e.getMessage());
-    } catch (Throwable t) {
-      t.printStackTrace();
-      throw new UsageException(t.getMessage());
-    }
-    int filesToFormat = parameters.files().size();
-    if (parameters.stdin()) {
-      filesToFormat++;
-    }
-
-    if (parameters.inPlace() && parameters.files().isEmpty()) {
-      throw new UsageException("in-place formatting was requested but no files were provided");
-    }
-    if (parameters.isSelection() && filesToFormat != 1) {
-      throw new UsageException("partial formatting is only support for a single file");
-    }
-    if (parameters.offsets().size() != parameters.lengths().size()) {
-      throw new UsageException("-offsets and -lengths flags must be provided in matching pairs");
-    }
-    if (filesToFormat <= 0 && !parameters.version() && !parameters.help()) {
-      throw new UsageException("no files were provided");
-    }
-    if (parameters.stdin() && !parameters.files().isEmpty()) {
-      throw new UsageException("cannot format from standard input and files simultaneously");
-    }
-    if (parameters.assumeFilename().isPresent() && !parameters.stdin()) {
-      throw new UsageException(
-          "--assume-filename is only supported when formatting standard input");
-    }
-    if (parameters.dryRun() && parameters.inPlace()) {
-      throw new UsageException("cannot use --dry-run and --in-place at the same time");
-    }
-    return parameters;
   }
 }
