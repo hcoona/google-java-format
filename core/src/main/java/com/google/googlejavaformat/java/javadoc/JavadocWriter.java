@@ -29,6 +29,7 @@ import static com.google.googlejavaformat.java.javadoc.Token.Type.PARAGRAPH_OPEN
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
+import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.javadoc.Token.Type;
 
 /**
@@ -373,7 +374,7 @@ final class JavadocWriter {
     appendSpaces(blockIndent + 1);
     output.append("*");
     appendSpaces(1);
-    remainingOnLine = JavadocFormatter.MAX_LINE_LENGTH - blockIndent - 3;
+    remainingOnLine = Formatter.MAX_LINE_LENGTH - blockIndent - 3;
     if (autoIndent == AUTO_INDENT) {
       appendSpaces(innerIndent());
       remainingOnLine -= innerIndent();
