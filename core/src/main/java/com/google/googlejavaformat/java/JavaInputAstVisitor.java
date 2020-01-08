@@ -2542,18 +2542,20 @@ public final class JavaInputAstVisitor extends TreePathScanner<Void, Void> {
       String equals,
       Optional<String> trailing) {
     sync(node);
+    TypeWithDims extractedDims = DimensionHelpers.extractDims(node.getType(), SortedDims.YES);
+    Optional<TypeWithDims> typeWithDims = Optional.of(extractedDims);
     declareOne(
         kind,
         annotationsDirection,
         Optional.of(node.getModifiers()),
-        node.getType(),
+        extractedDims.node,
         node.getName(),
         "",
         equals,
         initializer,
         trailing,
         /* receiverExpression= */ Optional.empty(),
-        /* typeWithDims= */ Optional.empty());
+        typeWithDims);
   }
 
   /** Does not omit the leading '<', which should be associated with the type name. */
@@ -3544,26 +3546,27 @@ public final class JavaInputAstVisitor extends TreePathScanner<Void, Void> {
 
   /**
    * Can a local with a set of modifiers be declared with horizontal annotations? This is currently
-   * true if there is at most one marker annotation, and no others.
+   * true if there is at most one parameterless annotation, and no others.
    *
    * @param modifiers the list of {@link ModifiersTree}s
    * @return whether the local can be declared with horizontal annotations
    */
   private Direction canLocalHaveHorizontalAnnotations(ModifiersTree modifiers) {
-    int markerAnnotations = 0;
+    int parameterlessAnnotations = 0;
     for (AnnotationTree annotation : modifiers.getAnnotations()) {
       if (annotation.getArguments().isEmpty()) {
-        markerAnnotations++;
+        parameterlessAnnotations++;
       }
     }
-    return markerAnnotations <= 1 && markerAnnotations == modifiers.getAnnotations().size()
+    return parameterlessAnnotations <= 1
+            && parameterlessAnnotations == modifiers.getAnnotations().size()
         ? Direction.HORIZONTAL
         : Direction.VERTICAL;
   }
 
   /**
    * Should a field with a set of modifiers be declared with horizontal annotations? This is
-   * currently true if all annotations are marker annotations.
+   * currently true if all annotations are parameterless annotations.
    */
   private Direction fieldAnnotationDirection(ModifiersTree modifiers) {
     for (AnnotationTree annotation : modifiers.getAnnotations()) {

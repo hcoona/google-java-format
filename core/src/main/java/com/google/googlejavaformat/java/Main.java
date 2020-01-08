@@ -151,7 +151,11 @@ public final class Main {
       optionsBuilder.style(Style.GOOGLE);
       Formatter.MAX_LINE_LENGTH = 100;
     }
-    JavaFormatterOptions options = optionsBuilder.build();
+    JavaFormatterOptions options =
+        optionsBuilder
+            .style(parameters.aosp() ? Style.AOSP : Style.GOOGLE)
+            .formatJavadoc(parameters.formatJavadoc())
+            .build();
 
     if (parameters.stdin()) {
       return formatStdin(parameters, options);
