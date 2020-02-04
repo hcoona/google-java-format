@@ -16,6 +16,7 @@
 
 package com.google.googlejavaformat.intellij;
 
+import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
@@ -68,6 +69,11 @@ class GoogleJavaFormatSettings implements PersistentStateComponent<GoogleJavaFor
 
   void setStyle(JavaFormatterOptions.Style style) {
     state.style = style;
+    if (style == JavaFormatterOptions.Style.Hadoop) {
+      Formatter.MAX_LINE_LENGTH = 80;
+    } else {
+      Formatter.MAX_LINE_LENGTH = 100;
+    }
   }
 
   enum EnabledState {
